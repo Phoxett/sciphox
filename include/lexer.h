@@ -21,6 +21,7 @@ void lexer_skipWhitespace(Lexer * lexer);
 void lexer_skipNewline(Lexer * lexer);
 Token * lexer_getNextToken(Lexer * lexer);
 Token * lexer_getString(Lexer * lexer);
+Token * lexer_getChar(Lexer * lexer);
 Token * lexer_getId(Lexer * lexer);
 Token * lexer_getNumber(Lexer * lexer);
 Token * lexer_advanceWithToken(Lexer * lexer, Token * token);

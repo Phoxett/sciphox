@@ -1,16 +1,17 @@
 #include "../include/parser.h"
 #include "../include/util.h"
+#include <stdio.h>
 
 
 Ast * parser_parseIntVariableDefinition(Parser * parser, Scope * scope)
 {
-	parser_eat(parser, TOKEN_ID); // int
+	parser_process(parser, TOKEN_ID); // int
 	char * variable_def_name = parser->currentToken->value;
-	parser_eat(parser, TOKEN_ID); // name
+	parser_process(parser, TOKEN_ID); // name
 	if (check_NextToken(parser, TOKEN_EQUALS))
 	{
-		parser_eat(parser, TOKEN_EQUALS);
-		Ast * variable_def_value = parser_parse_expr(parser, scope);
+		parser_process(parser, TOKEN_EQUALS);
+		Ast * variable_def_value = parser_expression_ast(parser, scope);
 		Ast * variable_def = init_ast(AST_INT_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_INT_ID;
@@ -23,6 +24,7 @@ Ast * parser_parseIntVariableDefinition(Parser * parser, Scope * scope)
 		
 		Ast * variable_def_value = init_ast(AST_INT);
 		variable_def_value->int_value = 0;
+		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_INT_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_INT_ID;
@@ -34,6 +36,7 @@ Ast * parser_parseIntVariableDefinition(Parser * parser, Scope * scope)
 	{
 		Ast * variable_def_value = init_ast(AST_INT);
 		variable_def_value->int_value = 0;
+		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_INT_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_INT_ID;
@@ -52,13 +55,13 @@ Ast * parser_parseIntVariableDefinition(Parser * parser, Scope * scope)
 
 Ast * parser_parseFloatVariableDefinition(Parser * parser, Scope * scope)
 {
-	parser_eat(parser, TOKEN_ID); // float
+	parser_process(parser, TOKEN_ID); // float
 	char * variable_def_name = parser->currentToken->value;
-	parser_eat(parser, TOKEN_ID); // name
+	parser_process(parser, TOKEN_ID); // name
 	if (check_NextToken(parser, TOKEN_EQUALS))
 	{
-		parser_eat(parser, TOKEN_EQUALS);
-		Ast * variable_def_value = parser_parse_expr(parser, scope);
+		parser_process(parser, TOKEN_EQUALS);
+		Ast * variable_def_value = parser_expression_ast(parser, scope);
 		Ast * variable_def = init_ast(AST_FLOAT_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_FLOAT_ID;
@@ -71,6 +74,7 @@ Ast * parser_parseFloatVariableDefinition(Parser * parser, Scope * scope)
 		
 		Ast * variable_def_value = init_ast(AST_FLOAT);
 		variable_def_value->float_value = 0.0;
+		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_FLOAT_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_FLOAT_ID;
@@ -82,6 +86,7 @@ Ast * parser_parseFloatVariableDefinition(Parser * parser, Scope * scope)
 	{
 		Ast * variable_def_value = init_ast(AST_FLOAT);
 		variable_def_value->float_value = 0.0;
+		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_FLOAT_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_FLOAT_ID;
@@ -101,13 +106,13 @@ Ast * parser_parseFloatVariableDefinition(Parser * parser, Scope * scope)
 
 Ast * parser_parseCharVariableDefinition(Parser * parser, Scope * scope)
 {
-	parser_eat(parser, TOKEN_ID); // char
+	parser_process(parser, TOKEN_ID); // char
 	char * variable_def_name = parser->currentToken->value;
-	parser_eat(parser, TOKEN_ID); // name
+	parser_process(parser, TOKEN_ID); // name
 	if (check_NextToken(parser, TOKEN_EQUALS))
 	{
-		parser_eat(parser, TOKEN_EQUALS);
-		Ast * variable_def_value = parser_parse_expr(parser, scope);
+		parser_process(parser, TOKEN_EQUALS);
+		Ast * variable_def_value = parser_parseExpression(parser, scope);
 		Ast * variable_def = init_ast(AST_CHAR_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_CHAR_ID;
@@ -120,6 +125,7 @@ Ast * parser_parseCharVariableDefinition(Parser * parser, Scope * scope)
 		
 		Ast * variable_def_value = init_ast(AST_CHAR);
 		variable_def_value->char_value = '\0';
+		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_CHAR_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_CHAR_ID;
@@ -131,6 +137,7 @@ Ast * parser_parseCharVariableDefinition(Parser * parser, Scope * scope)
 	{
 		Ast * variable_def_value = init_ast(AST_CHAR);
 		variable_def_value->char_value = '\0';
+		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_CHAR_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_CHAR_ID;
@@ -149,13 +156,13 @@ Ast * parser_parseCharVariableDefinition(Parser * parser, Scope * scope)
 
 Ast * parser_parseStringVariableDefinition(Parser * parser, Scope * scope)
 {
-	parser_eat(parser, TOKEN_ID); // int
+	parser_process(parser, TOKEN_ID); // int
 	char * variable_def_name = parser->currentToken->value;
-	parser_eat(parser, TOKEN_ID); // name
+	parser_process(parser, TOKEN_ID); // name
 	if (check_NextToken(parser, TOKEN_EQUALS))
 	{
-		parser_eat(parser, TOKEN_EQUALS);
-		Ast * variable_def_value = parser_parse_expr(parser, scope);
+		parser_process(parser, TOKEN_EQUALS);
+		Ast * variable_def_value = parser_parseExpression(parser, scope);
 		Ast * variable_def = init_ast(AST_STRING_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_STRING_ID;
@@ -168,6 +175,7 @@ Ast * parser_parseStringVariableDefinition(Parser * parser, Scope * scope)
 		
 		Ast * variable_def_value = init_ast(AST_INT);
 		variable_def_value->string_value = "";
+		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_STRING_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_STRING_ID;
@@ -180,6 +188,7 @@ Ast * parser_parseStringVariableDefinition(Parser * parser, Scope * scope)
 	{
 		Ast * variable_def_value = init_ast(AST_STRING);
 		variable_def_value->string_value = "";
+		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_STRING_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
 		variable_def->variable_def_type = TOKEN_STRING_ID;

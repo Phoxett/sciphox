@@ -58,19 +58,28 @@ Token * lexer_getNextToken(Lexer * lexer)
 			return lexer_getId(lexer);
 		if (isdigit(lexer->currentChar))
 			return lexer_getNumber(lexer);
-
 		if (lexer->currentChar == '"')
 			return lexer_getString(lexer);
+		if (lexer->currentChar == '\'')
+			return lexer_getChar(lexer);
 
 		switch (lexer->currentChar)
 		{
 			case '=': return lexer_advanceWithToken(lexer, init_token(TOKEN_EQUALS, lexer_getCurrentCharAsString(lexer))); break;
+			case '+': return lexer_advanceWithToken(lexer, init_token(TOKEN_PLUS, lexer_getCurrentCharAsString(lexer))); break;
+			case '-': return lexer_advanceWithToken(lexer, init_token(TOKEN_MINUS, lexer_getCurrentCharAsString(lexer))); break;
+			case '*': return lexer_advanceWithToken(lexer, init_token(TOKEN_MUL, lexer_getCurrentCharAsString(lexer))); break;
+			case '/': return lexer_advanceWithToken(lexer, init_token(TOKEN_DIV, lexer_getCurrentCharAsString(lexer))); break;
+			case '%': return lexer_advanceWithToken(lexer, init_token(TOKEN_MOD, lexer_getCurrentCharAsString(lexer))); break;
+			case '^': return lexer_advanceWithToken(lexer, init_token(TOKEN_POW, lexer_getCurrentCharAsString(lexer))); break;
 			case ';': return lexer_advanceWithToken(lexer, init_token(TOKEN_SEMI, lexer_getCurrentCharAsString(lexer))); break;
+			case ':': return lexer_advanceWithToken(lexer, init_token(TOKEN_COLON, lexer_getCurrentCharAsString(lexer))); break;
 			case '(': return lexer_advanceWithToken(lexer, init_token(TOKEN_LPAREN, lexer_getCurrentCharAsString(lexer))); break;
 			case ')': return lexer_advanceWithToken(lexer, init_token(TOKEN_RPAREN, lexer_getCurrentCharAsString(lexer))); break;
 			case '{': return lexer_advanceWithToken(lexer, init_token(TOKEN_LBRACE, lexer_getCurrentCharAsString(lexer))); break;
 			case '}': return lexer_advanceWithToken(lexer, init_token(TOKEN_RBRACE, lexer_getCurrentCharAsString(lexer))); break;
 			case ',': return lexer_advanceWithToken(lexer, init_token(TOKEN_COMMA, lexer_getCurrentCharAsString(lexer))); break;
+			case '.': return lexer_advanceWithToken(lexer, init_token(TOKEN_FULLSTOP, lexer_getCurrentCharAsString(lexer))); break;
 		}
 	}
 
@@ -98,6 +107,30 @@ Token * lexer_getString(Lexer * lexer)
 	return init_token(TOKEN_STRING, value);
 }
 
+
+Token * lexer_getChar(Lexer * lexer)
+{
+	lexer_advance(lexer);
+
+	char * value = calloc(1, sizeof(char));
+	value[0] = '\0';
+
+	char * s = lexer_getCurrentCharAsString(lexer);
+	value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
+	strcat(value, s);
+	lexer_advance(lexer);
+
+	if (lexer->currentChar != '\'')
+	{
+		printf("SytaxError: unexpected token %c, expected '\n", lexer->currentChar);
+		exit(1);
+	}
+
+	lexer_advance(lexer);
+
+	return init_token(TOKEN_CHAR, value);
+}
+
 Token * lexer_getId(Lexer * lexer)
 {
 	char * value = calloc(1, sizeof(char));
@@ -110,6 +143,15 @@ Token * lexer_getId(Lexer * lexer)
 		strcat(value, s);
 		lexer_advance(lexer);
 	}
+
+	if (strcmp(value, "int") == 0)
+		return init_token(TOKEN_INT_ID, "int");
+	if (strcmp(value, "float") == 0)
+		return init_token(TOKEN_FLOAT_ID, "float");
+	if (strcmp(value, "char") == 0)
+		return init_token(TOKEN_CHAR_ID, "char");
+	if (strcmp(value, "string") == 0)
+		return init_token(TOKEN_STRING_ID, "string");
 	
 	return init_token(TOKEN_ID, value);
 }
@@ -119,16 +161,15 @@ Token * lexer_getNumber(Lexer * lexer)
 {
 	char * value = calloc(1, sizeof(char));
 	value[0] = '\0';
-	char dot = 0;
 	while (isdigit(lexer->currentChar))
 	{
 		char * s = lexer_getCurrentCharAsString(lexer);
 		value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
 		strcat(value, s);
 		lexer_advance(lexer);
-		if ((lexer->currentChar == '.') && dot < 1)
+
+		if (lexer->currentChar == '.')
 		{
-			dot = 1;
 			char * s = lexer_getCurrentCharAsString(lexer);
 			value = realloc(value, (strlen(value) + strlen(s) + 1) * sizeof(char));
 			strcat(value, s);
@@ -140,7 +181,6 @@ Token * lexer_getNumber(Lexer * lexer)
 				strcat(value, s);
 				lexer_advance(lexer);
 			}
-			
 			return init_token(TOKEN_FLOAT, value);
 		}
 	}

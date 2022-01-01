@@ -1,11 +1,12 @@
 #include "../include/parser.h"
+#include "../include/util.h"
 #include <string.h>
 
 
 Ast * parser_parseIntFunctionDefinition(Parser * parser, Scope * scope)
 {
 	Ast * ast = init_ast(AST_INT_FUNCTION_DEFINITION);
-	parser_eat(parser, TOKEN_INT_ID); // int
+	parser_process(parser, TOKEN_INT_ID); // int
 
 	char * function_name = parser->currentToken->value;
 	ast->function_definition_name = calloc(
@@ -13,18 +14,49 @@ Ast * parser_parseIntFunctionDefinition(Parser * parser, Scope * scope)
 			sizeof(char));
 	strcpy(ast->function_definition_name, function_name);
 
-	parser_eat(parser, TOKEN_ID); // function name
-	parser_eat(parser, TOKEN_LPAREN);
+	parser_process(parser, TOKEN_ID); // function name
+	parser_process(parser, TOKEN_LPAREN);
 
 	ast->function_definition_args = calloc(1, sizeof(struct AST *));
 
+	if (check_NextToken(parser, TOKEN_RPAREN))
+	{
+		parser_process(parser, TOKEN_RPAREN);
+		parser_process(parser, TOKEN_LBRACE);
+		ast->function_definition_body = parser_parse_statements(parser, scope);
+		parser_process(parser, TOKEN_RBRACE);
+		ast->scope = scope;
+		return ast;
+	}
+	
+	if (parser->currentToken->type == (TOKEN_INT_ID || TOKEN_FLOAT_ID || TOKEN_CHAR_ID || TOKEN_STRING_ID))
+	{
+		switch (parser->currentToken->type)
+		{
+			case TOKEN_INT_ID:
+				Ast * arg = parser_parseIntVariableDefinition(parser, scope);
+				ast->function_definition_args_size += 1;
+				ast->function_definition_args[ast->function_definition_args_size-1] = arg;
+			
+			case TOKEN_FLOAT_ID:
+				Ast * arg = parser_parseFloatVariableDefinition(parser, scope);
+
+			case TOKEN_CHAR_ID:
+				Ast * arg =  parser_parseCharVariableDefinition(parser, scope);
+
+			case TOKEN_STRING_ID: 
+				Ast * arg = parser_parseStringVariableDefinition(parser, scope);
+		
+		}
+	}
+	
 	Ast * arg = parser_parse_variable(parser, scope);
 	ast->function_definition_args_size += 1;
 	ast->function_definition_args[ast->function_definition_args_size-1] = arg;
 
 	while (parser->currentToken->type == TOKEN_COMMA)
 	{
-		parser_eat(parser, TOKEN_COMMA);
+		parser_process(parser, TOKEN_COMMA);
 
 		ast->function_definition_args_size += 1;
 
@@ -38,13 +70,13 @@ Ast * parser_parseIntFunctionDefinition(Parser * parser, Scope * scope)
 		ast->function_definition_args[ast->function_definition_args_size-1] = arg;
 	}
 
-	parser_eat(parser, TOKEN_RPAREN);
+	parser_process(parser, TOKEN_RPAREN);
 	
-	parser_eat(parser, TOKEN_LBRACE);
+	parser_process(parser, TOKEN_LBRACE);
 	
 	ast->function_definition_body = parser_parse_statements(parser, scope);
 
-	parser_eat(parser, TOKEN_RBRACE);
+	parser_process(parser, TOKEN_RBRACE);
 
 	ast->scope = scope;
 
@@ -55,7 +87,7 @@ Ast * parser_parseIntFunctionDefinition(Parser * parser, Scope * scope)
 Ast * parser_parseFloatFunctionDefinition(Parser * parser, Scope * scope)
 {
 	Ast * ast = init_ast(AST_FUNCTION_DEFINITION);
-	parser_eat(parser, TOKEN_ID); // function
+	parser_process(parser, TOKEN_ID); // function
 
 	char * function_name = parser->currentToken->value;
 	ast->function_definition_name = calloc(
@@ -63,9 +95,9 @@ Ast * parser_parseFloatFunctionDefinition(Parser * parser, Scope * scope)
 	);
 	strcpy(ast->function_definition_name, function_name);
 
-	parser_eat(parser, TOKEN_ID); // function name
+	parser_process(parser, TOKEN_ID); // function name
 
-	parser_eat(parser, TOKEN_LPAREN);
+	parser_process(parser, TOKEN_LPAREN);
 
 	ast->function_definition_args =
 		calloc(1, sizeof(struct AST *));
@@ -76,7 +108,7 @@ Ast * parser_parseFloatFunctionDefinition(Parser * parser, Scope * scope)
 
 	while (parser->currentToken->type == TOKEN_COMMA)
 	{
-		parser_eat(parser, TOKEN_COMMA);
+		parser_process(parser, TOKEN_COMMA);
 
 		ast->function_definition_args_size += 1;
 
@@ -90,13 +122,13 @@ Ast * parser_parseFloatFunctionDefinition(Parser * parser, Scope * scope)
 		ast->function_definition_args[ast->function_definition_args_size-1] = arg;
 	}
 
-	parser_eat(parser, TOKEN_RPAREN);
+	parser_process(parser, TOKEN_RPAREN);
 	
-	parser_eat(parser, TOKEN_LBRACE);
+	parser_process(parser, TOKEN_LBRACE);
 	
 	ast->function_definition_body = parser_parse_statements(parser, scope);
 
-	parser_eat(parser, TOKEN_RBRACE);
+	parser_process(parser, TOKEN_RBRACE);
 
 	ast->scope = scope;
 
@@ -107,7 +139,7 @@ Ast * parser_parseFloatFunctionDefinition(Parser * parser, Scope * scope)
 Ast * parser_parseCharFunctionDefinition(Parser * parser, Scope * scope)
 {
 	Ast * ast = init_ast(AST_FUNCTION_DEFINITION);
-	parser_eat(parser, TOKEN_ID); // function
+	parser_process(parser, TOKEN_ID); // function
 
 	char * function_name = parser->currentToken->value;
 	ast->function_definition_name = calloc(
@@ -115,9 +147,9 @@ Ast * parser_parseCharFunctionDefinition(Parser * parser, Scope * scope)
 	);
 	strcpy(ast->function_definition_name, function_name);
 
-	parser_eat(parser, TOKEN_ID); // function name
+	parser_process(parser, TOKEN_ID); // function name
 
-	parser_eat(parser, TOKEN_LPAREN);
+	parser_process(parser, TOKEN_LPAREN);
 
 	ast->function_definition_args =
 		calloc(1, sizeof(struct AST *));
@@ -128,7 +160,7 @@ Ast * parser_parseCharFunctionDefinition(Parser * parser, Scope * scope)
 
 	while (parser->currentToken->type == TOKEN_COMMA)
 	{
-		parser_eat(parser, TOKEN_COMMA);
+		parser_process(parser, TOKEN_COMMA);
 
 		ast->function_definition_args_size += 1;
 
@@ -142,13 +174,13 @@ Ast * parser_parseCharFunctionDefinition(Parser * parser, Scope * scope)
 		ast->function_definition_args[ast->function_definition_args_size-1] = arg;
 	}
 
-	parser_eat(parser, TOKEN_RPAREN);
+	parser_process(parser, TOKEN_RPAREN);
 	
-	parser_eat(parser, TOKEN_LBRACE);
+	parser_process(parser, TOKEN_LBRACE);
 	
 	ast->function_definition_body = parser_parse_statements(parser, scope);
 
-	parser_eat(parser, TOKEN_RBRACE);
+	parser_process(parser, TOKEN_RBRACE);
 
 	ast->scope = scope;
 
@@ -159,7 +191,7 @@ Ast * parser_parseCharFunctionDefinition(Parser * parser, Scope * scope)
 Ast * parser_parseStringFunctionDefinition(Parser * parser, Scope * scope)
 {
 	Ast * ast = init_ast(AST_FUNCTION_DEFINITION);
-	parser_eat(parser, TOKEN_ID); // function
+	parser_process(parser, TOKEN_ID); // function
 
 	char * function_name = parser->currentToken->value;
 	ast->function_definition_name = calloc(
@@ -167,9 +199,9 @@ Ast * parser_parseStringFunctionDefinition(Parser * parser, Scope * scope)
 	);
 	strcpy(ast->function_definition_name, function_name);
 
-	parser_eat(parser, TOKEN_ID); // function name
+	parser_process(parser, TOKEN_ID); // function name
 
-	parser_eat(parser, TOKEN_LPAREN);
+	parser_process(parser, TOKEN_LPAREN);
 
 	ast->function_definition_args =
 		calloc(1, sizeof(struct AST *));
@@ -180,7 +212,7 @@ Ast * parser_parseStringFunctionDefinition(Parser * parser, Scope * scope)
 
 	while (parser->currentToken->type == TOKEN_COMMA)
 	{
-		parser_eat(parser, TOKEN_COMMA);
+		parser_process(parser, TOKEN_COMMA);
 
 		ast->function_definition_args_size += 1;
 
@@ -194,13 +226,13 @@ Ast * parser_parseStringFunctionDefinition(Parser * parser, Scope * scope)
 		ast->function_definition_args[ast->function_definition_args_size-1] = arg;
 	}
 
-	parser_eat(parser, TOKEN_RPAREN);
+	parser_process(parser, TOKEN_RPAREN);
 	
-	parser_eat(parser, TOKEN_LBRACE);
+	parser_process(parser, TOKEN_LBRACE);
 	
 	ast->function_definition_body = parser_parse_statements(parser, scope);
 
-	parser_eat(parser, TOKEN_RBRACE);
+	parser_process(parser, TOKEN_RBRACE);
 
 	ast->scope = scope;
 

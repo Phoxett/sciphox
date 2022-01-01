@@ -7,7 +7,7 @@
 
 
 bool check_NextToken(Parser * parser, char type);
-
+bool check_isItInt(float value);
 
 
 #endif

@@ -16,7 +16,7 @@ Parser * init_parser(Lexer * lexer)
 	return parser;
 }
 
-void parser_eat(Parser * parser, int token_type)
+void parser_process(Parser * parser, int token_type)
 {
 	if (parser->currentToken->type == token_type)
 	{
@@ -43,7 +43,7 @@ Ast * parser_parse_statement(Parser * parser, Scope * scope)
 {
 	switch (parser->currentToken->type)
 	{
-		case TOKEN_ID: return parser_parse_id(parser, scope);
+		case TOKEN_ID: return parser_parseId(parser, scope);
 	}
 
 	return init_ast(AST_NOOP);
@@ -62,7 +62,7 @@ Ast * parser_parse_statements(Parser * parser, Scope * scope)
 
 	while (parser->currentToken->type == TOKEN_SEMI)
 	{
-		parser_eat(parser, TOKEN_SEMI);
+		parser_process(parser, TOKEN_SEMI);
 
 		Ast * ast_statement = parser_parse_statement(parser, scope);
 
@@ -80,43 +80,37 @@ Ast * parser_parse_statements(Parser * parser, Scope * scope)
 	return compound;
 }
 
-Ast * parser_parse_expr(Parser * parser, Scope * scope)
+Ast * parser_parseExpression(Parser * parser, Scope * scope)
 {
 	switch (parser->currentToken->type)
 	{
-		case TOKEN_STRING: return parser_parse_string(parser, scope);
-		case TOKEN_ID: return parser_parse_id(parser, scope);
+		case TOKEN_STRING: return parser_parseString(parser, scope);
+		case TOKEN_CHAR: parser_parseChar(parser, scope);
+		case TOKEN_ID: return parser_parseId(parser, scope);
 	}
 
 	return init_ast(AST_NOOP);
 }
 
-Ast * parser_parse_factor(Parser * parser, Scope * scope)
-{
-}
 
-Ast * parser_parse_term(Parser * parser, Scope * scope)
-{
-}
-
-Ast * parser_parse_function_call(Parser * parser, Scope * scope)
+Ast * parser_parseFunctionCall(Parser * parser, Scope * scope)
 {
 	Ast * function_call = init_ast(AST_FUNCTION_CALL);
 
 	function_call->function_call_name = parser->prevToken->value;
-	parser_eat(parser, TOKEN_LPAREN); 
+	parser_process(parser, TOKEN_LPAREN); 
 
 	function_call->function_call_arguments = calloc(1, sizeof(struct AST *));
 
-	Ast * ast_expr = parser_parse_expr(parser, scope);
+	Ast * ast_expr = parser_parseExpression(parser, scope);
 	function_call->function_call_arguments[0] = ast_expr;
 	function_call->function_call_arguments_size += 1;
 
 	while (parser->currentToken->type == TOKEN_COMMA)
 	{
-		parser_eat(parser, TOKEN_COMMA);
+		parser_process(parser, TOKEN_COMMA);
 
-		Ast * ast_expr = parser_parse_expr(parser, scope);
+		Ast * ast_expr = parser_parseExpression(parser, scope);
 		function_call->function_call_arguments_size += 1;
 		function_call->function_call_arguments = realloc(
 			function_call->function_call_arguments,
@@ -124,7 +118,7 @@ Ast * parser_parse_function_call(Parser * parser, Scope * scope)
 		);
 		function_call->function_call_arguments[function_call->function_call_arguments_size-1] = ast_expr;
 	}
-	parser_eat(parser, TOKEN_RPAREN);
+	parser_process(parser, TOKEN_RPAREN);
 
 	function_call->scope = scope;
 
@@ -133,11 +127,11 @@ Ast * parser_parse_function_call(Parser * parser, Scope * scope)
 
 Ast * parser_parse_variable_definition(Parser * parser, Scope * scope)
 {
-	parser_eat(parser, TOKEN_ID); // var
+	parser_process(parser, TOKEN_ID); // var
 	char * variable_definition_variable_name = parser->currentToken->value;
-	parser_eat(parser, TOKEN_ID); // var name
-	parser_eat(parser, TOKEN_EQUALS);
-	Ast * variable_definition_value = parser_parse_expr(parser, scope);
+	parser_process(parser, TOKEN_ID); // var name
+	parser_process(parser, TOKEN_EQUALS);
+	Ast * variable_definition_value = parser_parseExpression(parser, scope);
 
 	Ast * variable_definition = init_ast(AST_VARIABLE_DEFINITION);
 	variable_definition->variable_definition_variable_name = variable_definition_variable_name;
@@ -151,7 +145,7 @@ Ast * parser_parse_variable_definition(Parser * parser, Scope * scope)
 Ast * parser_parse_function_definition(Parser * parser, Scope * scope)
 {
 	Ast * ast = init_ast(AST_FUNCTION_DEFINITION);
-	parser_eat(parser, TOKEN_ID); // function
+	parser_process(parser, TOKEN_ID); // function
 
 	char * function_name = parser->currentToken->value;
 	ast->function_definition_name = calloc(
@@ -159,9 +153,9 @@ Ast * parser_parse_function_definition(Parser * parser, Scope * scope)
 	);
 	strcpy(ast->function_definition_name, function_name);
 
-	parser_eat(parser, TOKEN_ID); // function name
+	parser_process(parser, TOKEN_ID); // function name
 
-	parser_eat(parser, TOKEN_LPAREN);
+	parser_process(parser, TOKEN_LPAREN);
 
 	ast->function_definition_args =
 		calloc(1, sizeof(struct AST *));
@@ -172,7 +166,7 @@ Ast * parser_parse_function_definition(Parser * parser, Scope * scope)
 
 	while (parser->currentToken->type == TOKEN_COMMA)
 	{
-		parser_eat(parser, TOKEN_COMMA);
+		parser_process(parser, TOKEN_COMMA);
 
 		ast->function_definition_args_size += 1;
 
@@ -186,13 +180,13 @@ Ast * parser_parse_function_definition(Parser * parser, Scope * scope)
 		ast->function_definition_args[ast->function_definition_args_size-1] = arg;
 	}
 
-	parser_eat(parser, TOKEN_RPAREN);
+	parser_process(parser, TOKEN_RPAREN);
 	
-	parser_eat(parser, TOKEN_LBRACE);
+	parser_process(parser, TOKEN_LBRACE);
 	
 	ast->function_definition_body = parser_parse_statements(parser, scope);
 
-	parser_eat(parser, TOKEN_RBRACE);
+	parser_process(parser, TOKEN_RBRACE);
 
 	ast->scope = scope;
 
@@ -202,10 +196,10 @@ Ast * parser_parse_function_definition(Parser * parser, Scope * scope)
 Ast * parser_parse_variable(Parser * parser, Scope * scope)
 {
 	char * token_value = parser->currentToken->value;
-	parser_eat(parser, TOKEN_ID); // var name or function call name
+	parser_process(parser, TOKEN_ID); // var name or function call name
 
 	if (parser->currentToken->type == TOKEN_LPAREN)
-		return parser_parse_function_call(parser, scope);
+		return parser_parseFunctionCall(parser, scope);
 
 	Ast * ast_variable = init_ast(AST_VARIABLE);
 	ast_variable->variable_name = token_value;
@@ -215,25 +209,69 @@ Ast * parser_parse_variable(Parser * parser, Scope * scope)
 	return ast_variable;
 }
 
-Ast * parser_parse_string(Parser * parser, Scope * scope)
+Ast * parser_parseString(Parser * parser, Scope * scope)
 {
 	Ast * ast_string = init_ast(AST_STRING);
 	ast_string->string_value = parser->currentToken->value;
 
-	parser_eat(parser, TOKEN_STRING);
+	parser_process(parser, TOKEN_STRING);
 
 	ast_string->scope = scope;
 
 	return ast_string;
 }
 
-Ast * parser_parse_id(Parser * parser, Scope * scope)
+
+Ast * parser_parseChar(Parser * parser, Scope * scope)
+{
+	Ast * ast_char = init_ast(AST_CHAR);
+	ast_char->char_value = parser->currentToken->value[0];
+
+	parser_process(parser, TOKEN_CHAR);
+
+	ast_char->scope = scope;
+
+	return ast_char;
+}
+
+Ast * parser_parseId(Parser * parser, Scope * scope)
 {
 	if (strcmp(parser->currentToken->value, "var") == 0)
 	{
 		return parser_parse_variable_definition(parser, scope);
 	}
-	else
+	if (strcmp(parser->currentToken->value, "int") == 0)
+	{
+		return parser_parseIntVariableDefinition(parser, scope);
+	}
+	if (strcmp(parser->currentToken->value, "float") == 0)
+	{
+		return parser_parseFloatVariableDefinition(parser, scope);
+	}
+	if (strcmp(parser->currentToken->value, "char") == 0)
+	{
+		return parser_parseCharVariableDefinition(parser, scope);
+	}
+	if (strcmp(parser->currentToken->value, "string") == 0)
+	{
+		return parser_parseStringVariableDefinition(parser, scope);
+	}
+	if (strcmp(parser->currentToken->value, "new") == 0)
+	{
+		parser_process(parser, TOKEN_NEW_ID);
+
+		switch (parser->currentToken->type)
+		{
+		case TOKEN_CHAR_ID:
+			return parser_parseCharFunctionDefinition(parser, scope);
+		case TOKEN_INT_ID:
+			return parser_parseIntFunctionDefinition(parser, scope);
+		case TOKEN_FLOAT_ID:
+			return parser_parseFloatFunctionDefinition(parser, scope);
+		case TOKEN_STRING_ID:
+			return parser_parseStringFunctionDefinition(parser, scope);
+		}
+	}
 	if (strcmp(parser->currentToken->value, "function") == 0)
 	{
 		return parser_parse_function_definition(parser, scope);

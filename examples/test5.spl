@@ -1,0 +1,11 @@
+
+new int add(int x, int y)
+{
+    return x + y:
+}:
+
+
+int x = int(input("int x: ")):
+int y = int(input("int y: ")):
+
+print("%d + %d = %d", x, y, add(x, y)):
