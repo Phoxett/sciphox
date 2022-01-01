@@ -1,0 +1,11 @@
+
+
+new void yearsToPension(int age)
+{
+	int years = 65 - age:
+	print("You have %d years", years):
+}:
+
+
+print("Enter your age: ", $input(int age) ):
+yearsToPension(age):
