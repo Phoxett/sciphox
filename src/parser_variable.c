@@ -124,7 +124,7 @@ Ast * parser_parseCharVariableDefinition(Parser * parser, Scope * scope)
 	{
 		
 		Ast * variable_def_value = init_ast(AST_CHAR);
-		variable_def_value->char_value = '\0';
+		variable_def_value->char_value = 0;
 		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_CHAR_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
@@ -136,7 +136,7 @@ Ast * parser_parseCharVariableDefinition(Parser * parser, Scope * scope)
 	else if (check_NextToken(parser, TOKEN_COMMA))
 	{
 		Ast * variable_def_value = init_ast(AST_CHAR);
-		variable_def_value->char_value = '\0';
+		variable_def_value->char_value = 0;
 		variable_def_value->scope = scope;
 		Ast * variable_def = init_ast(AST_CHAR_VARIABLE_DEFINITION);
 		variable_def->variable_def_name = variable_def_name;
