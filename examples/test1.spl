@@ -1,4 +1,6 @@
 
-int add = 18 + (18):
+
+int add = 10:
+add -= 18 + (18):
 
 print(ans):

@@ -8,20 +8,20 @@ char * get_file_contents(const char * filepath)
 	char * buffer = 0;
 	long length;
 
-	FILE* f = fopen(filepath, "rb");
+	FILE* file = fopen(filepath, "rb");
 
-	if (f)
+	if (file)
 	{
-		fseek(f, 0, SEEK_END);
-		length = ftell(f);
-		fseek(f, 0, SEEK_SET);
+		fseek(file, 0, SEEK_END);
+		length = ftell(file);
+		fseek(file, 0, SEEK_SET);
 
 		buffer = calloc(length, length);
 
 		if (buffer)
-			fread(buffer, 1, length, f);
+			fread(buffer, 1, length, file);
 
-		fclose(f);
+		fclose(file);
 		return buffer;
 	}
 

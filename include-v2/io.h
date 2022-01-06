@@ -6,7 +6,7 @@
 
 
 char * read_file(char * filepath);
-char * write_file(File * file, char * content);
+char * write_file(FILE * file, char * content);
 
 
 #endif
